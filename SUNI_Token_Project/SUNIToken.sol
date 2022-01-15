@@ -678,7 +678,7 @@ interface IUniswapV2Router02 is IUniswapV2Router01 {
 }
 
 
-contract dNFTspot is Context, IERC20, Ownable {
+contract SUNI is Context, IERC20, Ownable {
     using SafeMath for uint256;
     using Address for address;
 
@@ -696,8 +696,8 @@ contract dNFTspot is Context, IERC20, Ownable {
     uint256 private _rTotal = (MAX - (MAX % _tTotal));
     uint256 private _tFeeTotal;
 
-    string private _name = "dNFTspot token";
-    string private _symbol = "SPOT";
+    string private _name = "SUNI";
+    string private _symbol = "SUNIT";
     uint8 private _decimals = 18;
     
     uint256 public _taxFee = 1;
