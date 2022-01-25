@@ -85,7 +85,7 @@ const MyModal = ({ isOpen, setIsOpen, onlyOneToast}) => {
                                 <div className="text-white col-12 m-auto"> <span style={{wordBreak: 'break-all'}}>{account}</span></div>
                             </div>
                             <div data-bs-dismiss="modal" id="wallet-connect-metamask" className="c-list border-b px-3 py-2 d-flex align-items-center cursor-pointer">
-                                <a href={"https://etherscan.io/address/" + account} target="_blank" className="text-white m-auto"> View on BSCScan </a>
+                                <a href={"https://etherscan.io/address/" + account} target="_blank" className="text-white m-auto"> View on EtherScan </a>
                                 <a className="text-white m-auto" onClick={ handleDisconnectWallet }> Disconnect</a>
                             </div>
                         </>

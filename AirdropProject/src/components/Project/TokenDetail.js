@@ -186,7 +186,7 @@ export default function TokenDetail() {
                                         {project.status === 'Coming' ? ' Opens in TBA' : project.status === 'Open' ? ' Active' : ' Closed'}
                                     </span>
                                     <div className="buyBtnContainer d-flex">
-                                        <span className="status">Passive Incomming</span>
+                                        <span className="status">Passive Income</span>
                                         <span className="status">Airdrop</span>
                                     </div>
                                     <div className="social-links">
