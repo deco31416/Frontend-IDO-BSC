@@ -35,6 +35,7 @@ export function useGetTotalClaimableAmount(tokenIds, startTimestamps) {
     method: 'getAmount',
     args: [tokenIds, startTimestamps],
   }) ?? [];
+  console.log('amount----', amount)
   return amount;
 }
 

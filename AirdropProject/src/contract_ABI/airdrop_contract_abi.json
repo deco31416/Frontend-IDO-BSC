@@ -26,9 +26,14 @@
 	{
 		"inputs": [
 			{
-				"internalType": "uint256",
-				"name": "startTimestamp",
-				"type": "uint256"
+				"internalType": "uint256[]",
+				"name": "tokenIds",
+				"type": "uint256[]"
+			},
+			{
+				"internalType": "uint256[]",
+				"name": "startTimestamps",
+				"type": "uint256[]"
 			},
 			{
 				"internalType": "address",
@@ -44,9 +49,14 @@
 	{
 		"inputs": [
 			{
-				"internalType": "uint256",
-				"name": "startTimestamp",
-				"type": "uint256"
+				"internalType": "uint256[]",
+				"name": "tokenIds",
+				"type": "uint256[]"
+			},
+			{
+				"internalType": "uint256[]",
+				"name": "startTimestamps",
+				"type": "uint256[]"
 			}
 		],
 		"name": "getAmount",
@@ -64,8 +74,37 @@
 		"inputs": [
 			{
 				"internalType": "address",
+				"name": "user",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "tokenId",
+				"type": "uint256"
+			}
+		],
+		"name": "getLastClaimedTime",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
 				"name": "",
 				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
 			}
 		],
 		"name": "lastClaimedTime",

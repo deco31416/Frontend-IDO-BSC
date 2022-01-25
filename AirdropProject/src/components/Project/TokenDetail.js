@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 
-import { SiWebpack, AiFillTwitterCircle, AiOutlineMedium, FaTelegramPlane, BsCircleFill, BiMoney } from 'react-icons/all';
+import { SiWebpack, AiFillTwitterCircle, RiDiscordLine, SiMarketo, BsCircleFill } from 'react-icons/all';
 import { ProgressBar } from 'react-bootstrap';
 import tokenLogo from '../../assets/img/logo.png';
 import MyModal from '../modal/Modal';
@@ -8,6 +8,7 @@ import BuyModal from '../modal/BuyModal';
 import { useEthers, useTokenBalance } from "@usedapp/core";
 import { Container, Row, Col } from 'react-bootstrap';
 import axios from 'axios';
+import { Toast} from 'react-bootstrap';
 import { 
     useAirdropContractMethod, 
     useSuniTokenContractMethod,
@@ -30,33 +31,40 @@ export default function TokenDetail() {
     const currentTime = Math.round(new Date().getTime()/1000);
     const [isOpen, setIsOpen] = useState(false);
     const [isOpenBuy, setIsOpenBuy] = useState(false);
+    const [showToastBuy, setShowToastBuy] = useState(false);
+    const [toastTextBuy, setToastTextBuy] = useState('');
     const {account, chainId} = useEthers();
 
     const [myNfts, setMyNfts] = useState([]);
     const [myTokenIds, setMyTokenIds] = useState([]);
     const [myStartTimes, setMyStartTimes] = useState([]);
     
-    const suniBalance = useTokenBalance(suniTokenAddress, account) / 10 ** 18;
+    let suniBalance = useTokenBalance(suniTokenAddress, account);
     let nftBalance = useTokenBalance(nftTokenAddress, account);
-    let lastClaimedTime = useGetLastClaimedTime(account, myNfts[0]);
+    let lastClaimedTime = useGetLastClaimedTime(account, 1);
+
+    console.log('myTokenIds, myStartTimes', myTokenIds, myStartTimes)
     let totalClaimableAmount = useGetTotalClaimableAmount(myTokenIds, myStartTimes);
+    console.log('nftBalances', nftBalance)
+    console.log("totalClaimableAmount", Number(totalClaimableAmount))
+    console.log("lastClaimedTime", lastClaimedTime)
+
 
     useEffect( () => {
         getMyNft();
         claimToken('get');
         return () => { unmounted.current = false }
-    }, []);
+    }, [myNfts, account]);
 
     useEffect( () => {
-        console.log('sss', myNfts);
+        console.log('sss', lastClaimedTime);
         return () => { unmounted.current = false }
-    }, [ myNfts ]);
-    
-
+    }, []);
+ 
     function getMyNft() {
         var options1 = {
             method: 'GET',
-            url: 'https://deep-index.moralis.io/api/v2/0x6050e98aA1B1c167F649A6C1814Bf2FAED265767/nft/0x8dBc499910BB2dC8D749e936F12227dBC1590329?chain=eth&format=decimal',
+            url: 'https://deep-index.moralis.io/api/v2/' + account + '/nft/' + nftTokenAddress + '?chain=eth&format=decimal',
             headers: {Accept: 'application/json', 'X-API-KEY': 'aF6jKJDYuy0p8jXoA9hSwJn68VMevh9XKrENKU2XzMFRjTPAcjp1nHeDE6JESV2L'}
         };
 
@@ -83,7 +91,7 @@ export default function TokenDetail() {
     function claimToken(option) {
         var options2 = {
             method: 'GET',
-            url: 'https://deep-index.moralis.io/api/v2/0x6050e98aA1B1c167F649A6C1814Bf2FAED265767/nft/transfers?chain=eth&format=decimal&direction=both',
+            url: 'https://deep-index.moralis.io/api/v2/' + account + '/nft/transfers?chain=eth&format=decimal&direction=both',
             headers: {Accept: 'application/json', 'X-API-KEY': 'aF6jKJDYuy0p8jXoA9hSwJn68VMevh9XKrENKU2XzMFRjTPAcjp1nHeDE6JESV2L'}
         };
 
@@ -99,7 +107,10 @@ export default function TokenDetail() {
                 transferInfo.map((transferItem) => {
                     if(nftItem.token_id == transferItem.token_id && nftItem.owner_of == transferItem.to_address && nftItem.token_address == transferItem.token_address && flag == 0) {
                         let startTimestamp = new Date(transferItem.block_timestamp);
-                        startTimestamp = startTimestamp.getTime() / 1000;
+                        startTimestamp = Number(startTimestamp.getTime() / 1000).toString();
+
+                        if(startTimestamp < 1642118400) // If hold date is less 14th Jan 2022, it set 2022/1/14
+                            startTimestamp = '1642118400';
                         
                         tokenIds.push(nftItem.token_id);
                         startTimes.push(startTimestamp);
@@ -119,11 +130,14 @@ export default function TokenDetail() {
             console.log('result-------', claimReqInfo);
             console.log('tokenIds-------', tokenIds);
             console.log('startTimes-------', startTimes);
-            if(option == 'claim')
+            if(option == 'claim'){
+                console.log('option', option)
                 doAirdrop(tokenIds, startTimes, account);
+            }          
             else if(option == 'get'){
                 setMyTokenIds(tokenIds);
                 setMyStartTimes(startTimes);
+                console.log('option', option)
             }
 
           }).catch(function (error) {
@@ -133,6 +147,17 @@ export default function TokenDetail() {
 
         // setIsOpenBuy(true);
     }
+
+    useEffect( () => {
+        if(stateDoAirdrop.status == 'Success') {
+            setToastTextBuy("Claiming successfully!");
+            setShowToastBuy(true);
+        }else if(stateDoAirdrop.status == 'Exception') {
+            setToastTextBuy(stateDoAirdrop.errorMessage);
+            setShowToastBuy(true);
+        }
+        return () => { unmounted.current = false }
+    }, [ stateDoAirdrop ]);
 
     return (
         <>
@@ -149,10 +174,10 @@ export default function TokenDetail() {
                                     <div className="grid-box">
                                         <div className="text-white my-0 ml-3" style={{fontSize: '1.5rem'}}>SUNI</div>
                                         <div className="social-links">
-                                            <a href="https://Casper-pad.com"><SiWebpack className="social-link" /></a>
-                                            <a href="https://twitter.com/Casper_Pad"><AiFillTwitterCircle className="social-link" /></a>
-                                            <a href="https://casperpad.medium.com"><AiOutlineMedium className="social-link" /></a>
-                                            <a href=" https://t.me/CasperPadPublic"><FaTelegramPlane className="social-link" /></a>
+                                            <a href="https://sassyunicorns.io/"><SiWebpack className="social-link" /></a>
+                                            <a href="https://twitter.com/SassyUnicornNFT"><AiFillTwitterCircle className="social-link" /></a>
+                                            <a href="https://discord.gg/2PjVUrJvDJ"><RiDiscordLine className="social-link" /></a>
+                                            <a href="https://opensea.io/collection/sassy-unicorns"><SiMarketo className="social-link" /></a>
                                         </div>
                                         <div></div>
                                     </div>
@@ -184,8 +209,9 @@ export default function TokenDetail() {
                             <div className="grid-box text-white">
                                 <div style={{paddingRight: '3rem'}}> {!suniBalance ? ('-') : (suniBalance + ' SUNI')} </div>
                                 <div>
-                                    {(account && nftBalance > 0 && totalClaimableAmount > 0) && (
-                                        <button className="btn btn-wallet wallet-connected" onClick={claimToken('calaim')}> Claim SUNI Token </button>
+                                    {(account && nftBalance && totalClaimableAmount > 0) && (
+                                        <button className="btn btn-wallet wallet-connected" onClick={ ()=>{
+                                            claimToken('claim')} }> Claim SUNI Token </button>
                                     ) }
                                 </div>
                             </div>
@@ -195,12 +221,12 @@ export default function TokenDetail() {
                                 <div> Total Claimable Amount: </div>
                             </div>
                             <div className="grid-box text-white">
-                                <div> { nftBalance * 1 } </div>
-                                <div> { nftBalance ? '-' : totalClaimableAmount * 7 + ' SUNI' } </div>
+                                <div> { nftBalance ? nftBalance * 1 : '-' } </div>
+                                <div> { nftBalance ? Number(totalClaimableAmount) + ' SUNI' : '-' } </div>
                             </div>
                             <div className="grid-box text-white">
                                 <div>  </div>
-                                <div> {nftBalance ? '-' : totalClaimableAmount * 7 + ' USD'} </div>
+                                <div> { nftBalance ? Number(totalClaimableAmount) + ' USD' : '-'  } </div>
                             </div>
                             <hr className="bg-gray-100" />
                             <div className="grid-box">
@@ -208,7 +234,9 @@ export default function TokenDetail() {
                                 <div> Incomming Start Days: </div>
                             </div>
                             <div className="grid-box text-white">
-                                <div> { lastClaimedTime == 0 ? new Date(lastClaimedTime * 1000).toLocaleString("en-US", {timeZone: "UTC"}) : '-' } </div>
+                                <div> { (nftBalance && myStartTimes[0]) &&(lastClaimedTime != 0 ? new Date(lastClaimedTime * 1000).toLocaleString("en-US", {timeZone: "UTC"}) : new Date(myStartTimes[0] * 1000).toLocaleString("en-US", {timeZone: "UTC"}) ) || '-'              
+                                
+                                } </div>
                                 <div> {12 + ' days'} </div>
                             </div>
                             <hr className="bg-gray-100" />
@@ -218,10 +246,10 @@ export default function TokenDetail() {
                                         <span>Remaining Timeline</span>
                                         <span>Lock Duration <span style={{ color: 'white', fontWeight: 'bold' }}>{'12 days'}</span></span>
                                     </div>
-                                    <ProgressBar now={ myStartTimes[0] == 0 ? '-' : (Number((currentTime - myStartTimes[0]) / 3600 / 24).toFixed(0)) / 12 * 100 } variant="pro" />
+                                    <ProgressBar now={ !myStartTimes[0] ? '-' : (12 - Number((currentTime - myStartTimes[0]) / 3600 / 24).toFixed(0)) / 12 * 100 } variant="pro" />
                                     <div className="progress-title">
                                         <span style={{ color: 'white', fontWeight: 'bold' }}>{}</span>
-                                        <span style={{ color: 'white', fontWeight: 'bold' }}>{ myStartTimes != NaN ? Number((currentTime - myStartTimes[0]) / 3600 / 24).toFixed(0)  + '/' + '12 dyas' : '-' }</span>
+                                        <span style={{ color: 'white', fontWeight: 'bold' }}>{ myStartTimes[0] ? (12 - Number((currentTime - myStartTimes[0]) / 3600 / 24).toFixed(0)  + '/' + '12 dyas') : '' }</span>
                                     </div>
                                 </div>
                             </div>
@@ -231,6 +259,19 @@ export default function TokenDetail() {
             </Container>
             <MyModal isOpen = { isOpen } setIsOpen = {setIsOpen} onlyOneToast = {true}/>
             <BuyModal isOpen = { isOpenBuy } setIsOpen = {setIsOpenBuy} onlyOneToast = {false}/>
+
+            <Toast onClose={() => setShowToastBuy(false)} show={showToastBuy} delay={7000} autohide>
+                <Toast.Header>
+                    <img
+                    src="holder.js/20x20?text=%20"
+                    className="rounded me-2"
+                    alt=""
+                    />
+                    <strong className="me-auto">Notice</strong>
+                    <small className="mr-auto"></small>
+                </Toast.Header>
+                <Toast.Body>{ toastTextBuy }</Toast.Body>
+            </Toast>
         </>
     );
 }

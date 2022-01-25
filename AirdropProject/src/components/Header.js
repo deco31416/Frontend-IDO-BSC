@@ -40,7 +40,7 @@ const Header =() => {
                         {!account && (
                             <li className=" d-flex hd-btn"><button className="btn btn-wallet wallet-default my-auto" onClick={connectWallet}> Connect Wallet </button></li>
                         ) || (
-                            <li className='hd-btn'><button className="btn btn-wallet wallet-connected " onClick={connectWallet}> { String(account).substring(0, 6) + "..." + String(account).substring(38) + " : " + Number(tokenBalance/10**18).toFixed(2) + '  SUNI' } </button></li>
+                            <li className='hd-btn'><button className="btn btn-wallet wallet-connected " onClick={connectWallet}> { String(account).substring(0, 6) + "..." + String(account).substring(38) + " : " + (tokenBalance ? Number(tokenBalance/10**18).toFixed(2) : 0 ) + '  SUNI' } </button></li>
                         )}
                     </ul>
                     <ul className="nav-mobile">
