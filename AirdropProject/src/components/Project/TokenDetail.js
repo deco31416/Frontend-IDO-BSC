@@ -19,8 +19,39 @@ import {
     suniTokenAddress, 
     nftTokenAddress 
 } from '../../contract_ABI/vestingData';
+import { useMoralis } from "react-moralis";
 
 export default function TokenDetail() {
+    const {
+		Moralis,
+		user,
+		logout,
+		authenticate,
+		enableWeb3,
+		isInitialized,
+		isAuthenticated,
+		isWeb3Enabled,
+	} = useMoralis();
+
+    const serverUrl = "https://cpv80vvgo3py.usemoralis.com:2053/server";
+    const appId = "wLREEVSDVuKj2A42TeKCeuYVw4jkVwiRXsgnalj0";
+    Moralis.start({serverUrl:serverUrl, appId :appId});
+    
+    const getOrder = async (tokenID) => {
+		const res = await Moralis.Plugins.opensea.getOrders({
+			network: "mainnet",
+			tokenAddress: nftTokenAddress,
+			tokenId: tokenID,
+			orderSide: 0, // 0 is for buy orders, 1 is for sell orders
+			page: 1, // pagination shows 20 orders each page
+		});
+
+		console.log('getOrder', res);
+        return res;
+	};
+
+    // console.log('moralis_result:', result)
+
     const unmounted = useRef(true);
     const project = {
         name: 'SUNI',
@@ -39,27 +70,31 @@ export default function TokenDetail() {
     const [myTokenIds, setMyTokenIds] = useState([]);
     const [myStartTimes, setMyStartTimes] = useState([]);
     
-    let suniBalance = useTokenBalance(suniTokenAddress, account);
-    let nftBalance = useTokenBalance(nftTokenAddress, account);
-    let lastClaimedTime = useGetLastClaimedTime(account, 1);
+    const suniBalance = useTokenBalance(suniTokenAddress, account) / 10 ** 18;
+    // const nftBalance = useTokenBalance(nftTokenAddress, account);
+    const[nftBalance, setNftBalance] = useState('');
+    const lastClaimedTime = useGetLastClaimedTime(account, myTokenIds[0]);
 
-    console.log('myTokenIds, myStartTimes', myTokenIds, myStartTimes)
-    let totalClaimableAmount = useGetTotalClaimableAmount(myTokenIds, myStartTimes);
+    const totalClaimableAmount = useGetTotalClaimableAmount(myTokenIds, myStartTimes, account) / 10 ** 18;
+    // let [totalClaimableAmount, setTotalClaimableAmount] = useState(0);
     console.log('nftBalances', nftBalance)
     console.log("totalClaimableAmount", Number(totalClaimableAmount))
     console.log("lastClaimedTime", lastClaimedTime)
 
+    useEffect( () => {
+        Moralis.start({ serverUrl, appId});
+
+        if (isInitialized) {
+			Moralis.initPlugins();
+		}
+        return () => { unmounted.current = false }
+    }, []);
 
     useEffect( () => {
         getMyNft();
         claimToken('get');
         return () => { unmounted.current = false }
     }, [myNfts, account]);
-
-    useEffect( () => {
-        console.log('sss', lastClaimedTime);
-        return () => { unmounted.current = false }
-    }, []);
  
     function getMyNft() {
         var options1 = {
@@ -79,8 +114,7 @@ export default function TokenDetail() {
                     token_address: item.token_address,
                 });
             });
-
-            console.log('options1', response.data.result);
+            setNftBalance(response.data.result.length);
             setMyNfts(myNfts_tmp);
           }).catch(function (error) {
             console.error(error);
@@ -108,11 +142,17 @@ export default function TokenDetail() {
                     if(nftItem.token_id == transferItem.token_id && nftItem.owner_of == transferItem.to_address && nftItem.token_address == transferItem.token_address && flag == 0) {
                         let startTimestamp = new Date(transferItem.block_timestamp);
                         startTimestamp = Number(startTimestamp.getTime() / 1000).toString();
-
-                        if(startTimestamp < 1642118400) // If hold date is less 14th Jan 2022, it set 2022/1/14
-                            startTimestamp = '1642118400';
+                        if(startTimestamp < 1642798800){ // If hold date is less 14th Jan 2022, it set 2022/1/14
+                            startTimestamp = 1642798800;
+                        } else{
+                            let days = parseInt(startTimestamp / 86400);
+                            startTimestamp = days * 86400 - 3600 * 3;
+                            console.log('eeeeeeeeeeeeee', startTimestamp)
+                        }
                         
-                        tokenIds.push(nftItem.token_id);
+                        const isList = getOrder(29);
+                        console.log('isList', isList)
+                        tokenIds.push(Number(nftItem.token_id).toString());
                         startTimes.push(startTimestamp);
 
                         claimReqInfo.push({
@@ -167,7 +207,7 @@ export default function TokenDetail() {
                         <section className="mt-auto">
                             <div className="toekn-detail-header d-flex mt-5">
                                 <div className="custom-card-title"><img className="tokenLogo mt-auto" src={tokenLogo} alt="project profile"></img></div>
-                                <div className="custom-card-title"><h2 className="text-white mb-auto  tokenLogoTitle">Sassy Unicrons</h2></div>
+                                <div className="custom-card-title"><h2 className="text-white mb-auto  tokenLogoTitle">Sassy Unicorns</h2></div>
                             </div>
                             <div className="custom-card-header">
                                 <div className="custom-card-title">
@@ -231,7 +271,7 @@ export default function TokenDetail() {
                             <hr className="bg-gray-100" />
                             <div className="grid-box">
                                 <div> Start Date </div>
-                                <div> Incomming Start Days: </div>
+                                <div> Staking period: </div>
                             </div>
                             <div className="grid-box text-white">
                                 <div> { (nftBalance && myStartTimes[0]) &&(lastClaimedTime != 0 ? new Date(lastClaimedTime * 1000).toLocaleString("en-US", {timeZone: "UTC"}) : new Date(myStartTimes[0] * 1000).toLocaleString("en-US", {timeZone: "UTC"}) ) || '-'              
@@ -249,7 +289,7 @@ export default function TokenDetail() {
                                     <ProgressBar now={ !myStartTimes[0] ? '-' : (12 - Number((currentTime - myStartTimes[0]) / 3600 / 24).toFixed(0)) / 12 * 100 } variant="pro" />
                                     <div className="progress-title">
                                         <span style={{ color: 'white', fontWeight: 'bold' }}>{}</span>
-                                        <span style={{ color: 'white', fontWeight: 'bold' }}>{ myStartTimes[0] ? (12 - Number((currentTime - myStartTimes[0]) / 3600 / 24).toFixed(0)  + '/' + '12 dyas') : '' }</span>
+                                        <span style={{ color: 'white', fontWeight: 'bold' }}>{ (myStartTimes[0] ? (Number((currentTime - myStartTimes[0]) / 3600 / 24).toFixed(0) <= 13 ? (13 - Number((currentTime - myStartTimes[0]) / 3600 / 24).toFixed(0)  + '/' + '12 dyas') : 'Active') : '') }</span>
                                     </div>
                                 </div>
                             </div>

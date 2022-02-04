@@ -12,6 +12,7 @@ const Header =() => {
     const {account} = useEthers();
     const tokenBalance = useTokenBalance(suniTokenAddress, account);
 
+    const [isOpenModal, setIsOpenModal] = useState(false);
     const [isOpen, setIsOpen] = useState(false);
     const [star, setStar] = useState(true);
 
@@ -24,7 +25,7 @@ const Header =() => {
     }
 
     function connectWallet(){
-        setIsOpen(true);
+        setIsOpenModal(true);
     }
 
     return (
@@ -33,7 +34,7 @@ const Header =() => {
             <nav className="navbar">
                 <a className="cursor-pointer">
                     <img src={logo} alt="logo"></img>
-                    <span className='title'>Sassy Unicrons</span>
+                    <span className='title'>Sassy Unicorns</span>
                 </a>
                 <div className="nav-center">
                     <ul className={isOpen ? "nav-links show-nav" : "nav-links"}>
@@ -58,7 +59,7 @@ const Header =() => {
                     </ul>
                 </div>
             </nav>
-            <MyModal isOpen = { isOpen } setIsOpen = {setIsOpen} onlyOneToast = {false}/>
+            <MyModal isOpen = { isOpenModal } setIsOpen = {setIsOpenModal} onlyOneToast = {false}/>
         </section>
         </>
     );

@@ -46,7 +46,7 @@ const MyModal = ({ isOpen, setIsOpen, onlyOneToast}) => {
         if(chainIdConnect) //trustwallet
           chainId = chainIdConnect;
         
-        if(account && !onlyOneToast && !(chainId == 1 || chainId == 4)){
+        if(account && !onlyOneToast && !(chainId == 56 || chainId == 97)){
             setShowToast(true);
             deactivate();
         }

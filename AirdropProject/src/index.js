@@ -9,6 +9,7 @@ import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { DAppProvider, ChainId } from '@usedapp/core'
 import { Web3Provider } from "@ethersproject/providers";
+import { MoralisProvider } from "react-moralis";
 import {
   Web3ReactProvider
 } from "@web3-react/core";
@@ -19,12 +20,17 @@ function getLibrary(provider) {
   return library;
 }
 
+const serverUrl = "https://cpv80vvgo3py.usemoralis.com:2053/server";
+const appId = "wLREEVSDVuKj2A42TeKCeuYVw4jkVwiRXsgnalj0";
+
 ReactDOM.render(
   <Web3ReactProvider getLibrary={getLibrary}>
     <DAppProvider config={{}}>
-      <Router>
-        <App />
-      </Router>
+      <MoralisProvider appId={appId} serverUrl={serverUrl}>
+        <Router>
+          <App />
+        </Router>
+      </MoralisProvider>
     </DAppProvider>
   </Web3ReactProvider>,
   document.getElementById('root')

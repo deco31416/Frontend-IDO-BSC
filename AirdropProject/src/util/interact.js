@@ -28,14 +28,15 @@ export function useGetLastClaimedTime(account, tokenId) {
     return timestamp;
 }
 
-export function useGetTotalClaimableAmount(tokenIds, startTimestamps) {
+export function useGetTotalClaimableAmount(tokenIds, startTimestamps, account) {
+  console.log('myTokenIds, myStartTimes', tokenIds, startTimestamps, account)
   const [amount] = useContractCall({
     abi: airdropContractInterface,
     address: airdropContractAddress,
     method: 'getAmount',
-    args: [tokenIds, startTimestamps],
+    args: [tokenIds, startTimestamps, account],
   }) ?? [];
-  console.log('amount----', amount)
+  console.log('amount----', Number(amount))
   return amount;
 }
 

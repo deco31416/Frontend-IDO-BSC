@@ -121,7 +121,7 @@ body {
   height: 100vh;
 }
 @media (max-width: 720px) {
-  body { padding-top: 90px; }
+  /* body { padding-top: 90px; } */
 }
 h1 {
   font-size: 3em;
