@@ -37,7 +37,7 @@
 			},
 			{
 				"internalType": "address",
-				"name": "_tokenAddress",
+				"name": "_verificationCode",
 				"type": "address"
 			}
 		],

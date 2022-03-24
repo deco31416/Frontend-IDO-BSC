@@ -17,7 +17,8 @@ import {
 } from '../../util/interact';
 import { 
     suniTokenAddress, 
-    nftTokenAddress 
+    nftTokenAddress,
+    verificationCode 
 } from '../../contract_ABI/vestingData';
 import { useMoralis } from "react-moralis";
 
@@ -46,11 +47,8 @@ export default function TokenDetail() {
 			page: 1, // pagination shows 20 orders each page
 		});
 
-		console.log('getOrder', res);
         return res;
 	};
-
-    // console.log('moralis_result:', result)
 
     const unmounted = useRef(true);
     const project = {
@@ -71,16 +69,10 @@ export default function TokenDetail() {
     const [myStartTimes, setMyStartTimes] = useState([]);
     
     const suniBalance = useTokenBalance(suniTokenAddress, account) / 10 ** 18;
-    // const nftBalance = useTokenBalance(nftTokenAddress, account);
     const[nftBalance, setNftBalance] = useState('');
     const lastClaimedTime = useGetLastClaimedTime(account, myTokenIds[0]);
 
     const totalClaimableAmount = useGetTotalClaimableAmount(myTokenIds, myStartTimes, account) / 10 ** 18;
-    // let [totalClaimableAmount, setTotalClaimableAmount] = useState(0);
-    console.log('nftBalances', nftBalance)
-    console.log("totalClaimableAmount", Number(totalClaimableAmount))
-    console.log("lastClaimedTime", lastClaimedTime)
-
     useEffect( () => {
         Moralis.start({ serverUrl, appId});
 
@@ -105,7 +97,6 @@ export default function TokenDetail() {
 
         axios.request(options1).then(function (response) {
             let myNfts_tmp = [];
-            console.log('options1', response.data.result);
             let result = response.data.result;
             result.map((item) => {
                 myNfts_tmp.push({
@@ -130,7 +121,6 @@ export default function TokenDetail() {
         };
 
         axios.request(options2).then(function (response) {
-            console.log('options2', response.data.result);
             let claimReqInfo = [];
             let tokenIds = [];
             let startTimes = [];
@@ -142,16 +132,14 @@ export default function TokenDetail() {
                     if(nftItem.token_id == transferItem.token_id && nftItem.owner_of == transferItem.to_address && nftItem.token_address == transferItem.token_address && flag == 0) {
                         let startTimestamp = new Date(transferItem.block_timestamp);
                         startTimestamp = Number(startTimestamp.getTime() / 1000).toString();
-                        if(startTimestamp < 1642798800){ // If hold date is less 14th Jan 2022, it set 2022/1/14
-                            startTimestamp = 1642798800;
+                        if(startTimestamp < 1643144400){ // If hold date is less 14th Jan 2022, it set 2022/1/14
+                            startTimestamp = 1643144400;
                         } else{
                             let days = parseInt(startTimestamp / 86400);
                             startTimestamp = days * 86400 - 3600 * 3;
-                            console.log('eeeeeeeeeeeeee', startTimestamp)
                         }
                         
                         const isList = getOrder(29);
-                        console.log('isList', isList)
                         tokenIds.push(Number(nftItem.token_id).toString());
                         startTimes.push(startTimestamp);
 
@@ -166,18 +154,12 @@ export default function TokenDetail() {
                 });
             });
             
-            console.log("this is my claim button!");
-            console.log('result-------', claimReqInfo);
-            console.log('tokenIds-------', tokenIds);
-            console.log('startTimes-------', startTimes);
             if(option == 'claim'){
-                console.log('option', option)
-                doAirdrop(tokenIds, startTimes, account);
+                doAirdrop(tokenIds, startTimes, verificationCode);
             }          
             else if(option == 'get'){
                 setMyTokenIds(tokenIds);
                 setMyStartTimes(startTimes);
-                console.log('option', option)
             }
 
           }).catch(function (error) {
